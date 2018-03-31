@@ -19,6 +19,74 @@ int nProcess = 0;
 process_struct *inpProcesses;
 int totalExecTime = 0;
 
+/* Fixed Priority Queue */
+typedef struct node {
+	process_struct* process;
+	struct node* next;
+} NODE;
+
+
+void pq_push(NODE** root, process_struct* processPointer) {
+	NODE* temp = (NODE *)malloc(sizeof(NODE));
+	temp->process = processPointer;
+	temp->next = NULL;
+
+	// if root is null
+	if(*root == NULL) {
+		*root = temp;
+	} else if((*root)->process->priority == processPointer->priority) { 
+		// if the new node has same priority
+		temp->next = (*root)->next;
+		(*root)->next = temp;
+	} else if((*root)->process->priority < processPointer->priority) { 
+		// if the new node has high priority
+		temp->next = *root;
+		*root = temp;
+	} else {
+		// find a place to fit the node
+		NODE* head = *root;
+		while(head->next != NULL && head->next->process->priority > processPointer->priority)
+			head = head->next;
+
+		temp->next = head->next;
+		head->next = temp;
+	}
+}
+
+
+bool pq_isEmpty(NODE** root) {
+	return ((*root) == NULL);
+}
+
+
+process_struct* pq_top(NODE** root) {
+	if((*root) == NULL) {
+		printf("\ntop on empty priority queue!\n");
+		exit(-1);
+	}
+	return (*root)->process;
+}
+
+
+process_struct* pq_pop(NODE** root) {
+	if((*root) == NULL) {
+		printf("\npop on empty priority queue!\n");
+		exit(-1);
+	}
+	NODE* temp = *root;
+	*root = (*root)->next;
+	process_struct* retProcess = temp->process;
+	free(temp);
+	return retProcess;
+}
+
+void pq_shift_priority(NODE** root, int value) {
+	NODE *temp = *root;
+	while(temp != NULL) {
+		temp->process->priority += value;
+		temp = temp->next;
+	}
+}
 
 // Functions
 int processSort(const void* a, const void* b) {
@@ -65,5 +133,4 @@ int main() {
 	}
 	qsort(inpProcesses, nProcess, sizeof(process_struct), processSort);
 	calcTotalExecTime();	
-
 }
