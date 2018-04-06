@@ -15,9 +15,11 @@ typedef struct process_data {
 	int waitingT;
 } process_struct;
 
+
 int nProcess = 0;
 process_struct *inpProcesses;
 int totalExecTime = 0;
+int *gantChart;
 
 /* Fixed Priority Queue */
 typedef struct node {
@@ -132,5 +134,36 @@ int main() {
 		inpProcesses[i].remainingT = inpProcesses[i].burstT;
 	}
 	qsort(inpProcesses, nProcess, sizeof(process_struct), processSort);
-	calcTotalExecTime();	
+	calcTotalExecTime();
+
+	gantChart = (int *)malloc(totalExecTime * sizeof(int));
+	for(int i=0; i<totalExecTime; i++) gantChart[i] = -1;
+
+	// scheduling
+	process_struct* current = NULL;
+	int cpuTime = 0;
+	NODE* priorityQueue = NULL;
+
+	for(; cpuTime < totalExecTime; cpuTime++) {
+		// add processes with arrivalT == cpuTime to fixed priority queue
+		for(int i=0; i<nProcess; i++) {
+			if(inpProcesses[i].arrivalT == cpuTime) {
+				inpProcesses[i].priority = 0;
+				pq_push(&priorityQueue, &inpProcesses[i]);
+			}
+		}
+
+		if(!pq_isEmpty(&priorityQueue)) {
+			current = pq_pop(&priorityQueue);
+			current->remainingT -= 1;
+			current->priority += 1;
+			pq_shift_priority(&priorityQueue, 2);
+			gantChart[cpuTime] = current->pid;	
+
+			// if process not finished
+			if(current->remainingT != 0) {
+				pq_push(&priorityQueue, current);
+			}
+		}
+	}	
 }
