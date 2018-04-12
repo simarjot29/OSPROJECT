@@ -90,6 +90,7 @@ void pq_shift_priority(NODE** root, int value) {
 	}
 }
 
+
 // Functions
 int processSort(const void* a, const void* b) {
 	process_struct *p1 = (process_struct *)a;
@@ -107,6 +108,16 @@ int processSort(const void* a, const void* b) {
 		return false;
 }
 
+int processSortPID(const void* a, const void* b) {
+	process_struct *p1 = (process_struct *)a;
+	process_struct *p2 = (process_struct *)b;
+
+	if(p1->pid > p2->pid)
+		return true;
+	else
+		return false;
+}
+
 // get total execution time
 void calcTotalExecTime() {
 	totalExecTime = inpProcesses[0].arrivalT;
@@ -117,6 +128,35 @@ void calcTotalExecTime() {
 			totalExecTime += (inpProcesses[i].arrivalT - totalExecTime) + inpProcesses[i].burstT;
 	}
 }
+
+void metricsCalculation() {
+	// start time calculation
+	for(int i=0; i<nProcess; i++) {
+		for(int j=0; j < totalExecTime; j++)
+			if(gantChart[j] == (i+1)) {
+				inpProcesses[i].startT = j;
+				break;
+			}
+	}
+
+	// finish time calculation
+	for(int i=0; i<nProcess; i++) {
+		for(int j=totalExecTime-1; j >= 0; j--)
+			if(gantChart[j] == (i+1)) {
+				inpProcesses[i].finishT = j+1;
+				break;
+			}
+	}
+
+	for(int i=0; i<nProcess; i++) {
+		// response time calculation
+		inpProcesses[i].responseT = inpProcesses[i].startT - inpProcesses[i].arrivalT;
+
+		// waiting time calulation
+		inpProcesses[i].waitingT = (inpProcesses[i].finishT - inpProcesses[i].startT) - inpProcesses[i].burstT;
+	}
+}
+
 
 int main() {
 	printf("\nEnter number of processes : ");
@@ -134,7 +174,7 @@ int main() {
 		inpProcesses[i].remainingT = inpProcesses[i].burstT;
 	}
 	qsort(inpProcesses, nProcess, sizeof(process_struct), processSort);
-	calcTotalExecTime();
+	calcTotalExecTime();	
 
 	gantChart = (int *)malloc(totalExecTime * sizeof(int));
 	for(int i=0; i<totalExecTime; i++) gantChart[i] = -1;
@@ -165,5 +205,24 @@ int main() {
 				pq_push(&priorityQueue, current);
 			}
 		}
-	}	
+	}
+
+	// go to previous state	
+	qsort(inpProcesses, nProcess, sizeof(process_struct), processSortPID);
+
+	// calculate metrics
+	metricsCalculation();
+
+	// print the result
+	printf("\n\nTotal Execution Time : %d", totalExecTime);
+	printf("\n\nPID     Arrival     Burst     Start     Finish     Response     Waiting");
+	for(int i=0; i<nProcess; i++)
+		printf("\n%3d     %7d     %5d     %5d     %6d     %8d     %7d",
+			inpProcesses[i].pid, inpProcesses[i].arrivalT, inpProcesses[i].burstT, inpProcesses[i].startT, inpProcesses[i].finishT, inpProcesses[i].responseT, inpProcesses[i].waitingT);
+	printf("\n\n");
+
+
+	// free memory
+	free(inpProcesses);
+	free(gantChart);
 }
