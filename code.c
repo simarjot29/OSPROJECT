@@ -219,8 +219,15 @@ int main() {
 	for(int i=0; i<nProcess; i++)
 		printf("\n%3d     %7d     %5d     %5d     %6d     %8d     %7d",
 			inpProcesses[i].pid, inpProcesses[i].arrivalT, inpProcesses[i].burstT, inpProcesses[i].startT, inpProcesses[i].finishT, inpProcesses[i].responseT, inpProcesses[i].waitingT);
-	printf("\n\n");
 
+    // average waiting Time
+    double avgWaitT = 0;
+    for(int i=0; i<nProcess; i++)
+        avgWaitT += (float)inpProcesses[i].waitingT;
+    avgWaitT /= nProcess;
+    
+    printf("\n\nAverage Waiting Time = %lf", avgWaitT);
+	printf("\n\n");
 
 	// free memory
 	free(inpProcesses);
