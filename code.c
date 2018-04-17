@@ -133,7 +133,7 @@ void metricsCalculation() {
 	// start time calculation
 	for(int i=0; i<nProcess; i++) {
 		for(int j=0; j < totalExecTime; j++)
-			if(gantChart[j] == (i+1)) {
+			if(gantChart[j] == inpProcesses[i].pid) {
 				inpProcesses[i].startT = j;
 				break;
 			}
@@ -142,7 +142,7 @@ void metricsCalculation() {
 	// finish time calculation
 	for(int i=0; i<nProcess; i++) {
 		for(int j=totalExecTime-1; j >= 0; j--)
-			if(gantChart[j] == (i+1)) {
+			if(gantChart[j] == inpProcesses[i].pid) {
 				inpProcesses[i].finishT = j+1;
 				break;
 			}
@@ -153,7 +153,7 @@ void metricsCalculation() {
 		inpProcesses[i].responseT = inpProcesses[i].startT - inpProcesses[i].arrivalT;
 
 		// waiting time calulation
-		inpProcesses[i].waitingT = (inpProcesses[i].finishT - inpProcesses[i].startT) - inpProcesses[i].burstT;
+		inpProcesses[i].waitingT = (inpProcesses[i].finishT - inpProcesses[i].arrivalT) - inpProcesses[i].burstT;
 	}
 }
 
